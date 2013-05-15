@@ -1,0 +1,26 @@
+// USB devices
+
+Device: 
+ idVendor: 1060 (ox0424)
+ idProduct: 38162 (0x9512)
+Device: 
+ idVendor: 7531 (ox1d6b)
+ idProduct: 2 (0x0002)
+Device: 
+ idVendor: 1060 (ox0424)
+ idProduct: 60416 (0xec00)
+Device: 
+ idVendor: 1921 (ox0781)
+ idProduct: 21510 (0x5406)
+Device: 
+ idVendor: 1507 (ox05e3)
+ idProduct: 1544 (0x0608)
+Device: 
+ idVendor: 2362 (ox093a)
+ idProduct: 9488 (0x2510)
+Device: 
+ idVendor: 1008 (ox03f0)
+ idProduct: 804 (0x0324)
+Device: 
+ idVendor: 9025 (ox2341) # Keypad
+ idProduct: 67 (0x0043)

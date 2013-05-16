@@ -5,6 +5,7 @@ import time	# Does not execute this command when launched from terminal
 from commands import *
 from ClockAideTime import *
 from Keypad import *
+from Motors import *
 from ClockAideSpeakTime import *
 
 

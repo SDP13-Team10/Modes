@@ -8,32 +8,68 @@ motor = motors()
 
 qBank = QuestionBank(databaseLocation)
 
-def read():
-	keypad.SendLine(modeLookUp["read"])
-	motor.SendLine(modeLookUp["read"])
-	time.sleep(2)
+def read(id, sessionActive):
 	qBank.generateTime()
-	print(motor.write(readModeTime(id)))		## send time to be displayed to motor
-	randomTime = qBank.getTimeTouple()
-	#speakTime(randomTime[0],randomTime[1])
-	readTime = keypad.read(5)			## include some timeout logic
-
-# Check time entered for correctness and send appropriate signal.
-# Create a readtime function
-
-	if checkReadTime(readTime,qBank.getTimeString()):
-		print(keypad.write(command["good"]))
-		time.sleep(2)
-		print(keypad.write(modeLookUp["normal"]))
-		print(motor.write(modeLookUp["normal"]))
-		return modes[0]
-	else:
-		print(keypad.write(command["wrong"]))
-		time.sleep(2)
-		print(keypad.write(modeLookUp["normal"]))
-		print(motor.write(modeLookUp["normal"]))
-		return modes[0]
+	readTime = readModeTime(id)
+	numAttempts = 0
+	#answerRight = 
+	#while sessionActive && answerWrong:
+	while (sessionActive && (numAttempts < 4)):
 		
+		keypad.SendLine(modeLookUp["read"])
+		motor.SendLine(modeLookUp["read"])
+		time.sleep(2)
+		
+		motor.SendLine(readTime)		## send time to be displayed to motor
+		#randomTime = qBank.getTimeTouple()
+		#speakTime(randomTime[0],randomTime[1])
+		keypadTime = keypad.ReadLine()			## include some timeout logic
+
+	# Check time entered for correctness and send appropriate signal.
+	# Create a readtime function
+
+		if checkReadTime(keypadTime,readTime):
+			numAttempts++
+		
+			#----------------#
+			# Database Stuff #
+			#----------------#
+			
+			print(keypad.SendLine(command["good"]))
+			time.sleep(2)
+			print(keypad.SendLine(command["more"]))
+			#print(motor.SendLine(command["more"]))
+			
+			response = keypad.ReadLine()
+			if response == command["ack"]:
+				qBank.generateTime()
+				readTime = readModeTime(id)
+				sessionActive = True
+				
+			else:
+				sessionActive = False
+				
+			#return modes[0]
+		else:
+			numAttempts++
+			
+			#----------------#
+			# Database Stuff #
+			#----------------#
+			
+			print(keypad.SendLine(command["wrong"]))
+			time.sleep(2)
+			print(keypad.SendLine(command["more"]))
+			response = keypad.ReadLine()
+			
+			if response == command["ack"]:
+				sessionActive = True
+				
+			else:
+				sessionActive = False
+				
+	return [sessionActive, modes[0]]
+
 def readModeTime(ID):
 	
 	# Get difficulty level that the student is on

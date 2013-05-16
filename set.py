@@ -8,49 +8,102 @@ motor = motors()
 
 qBank = QuestionBank(databaseLocation)
 
-def set():
-	print(keypad.SendLine(modeLookUp["set"]))
-	print(motor.SendLine(modeLookUp["set"]))
-	time.sleep(2)
-	#tme = currentTime.strftime("%H, %M")
+def set(id, sessionActive):
 	qBank.generateTime()
-	senttime = setModeTime(id)
-	print(keypad.SendLine(senttime))
-	randomTime = qBank.getTimeTouple()
-	speakTime(randomTime[0],randomTime[1])
-	motortime = qBank.getTimeString()
+	setTime = setModeTime(id)
+	numAttempts = 0
+	while (sessionActive && (numAttempts < 4)):
+	
+		keypad.SendLine(modeLookUp["set"])
+		motor.SendLine(modeLookUp["set"])
+		time.sleep(2)
+		
+		keypad.SendLine(setTime)
+		randomTime = qBank.getTimeTouple()
+		speakTime(randomTime[0],randomTime[1])
 
-	try:
 
 		comm = COMMAND[str(keypad.read())]
 	
 		if comm == "GET_TIME":
-			motortime = getTimeFromMotor()
-	
-		#else
+			motorTime = motor.ReadLine()
 		
-		if senttime == motortime:
+		if checkSetTime(motorTime, setTime):
+			numAttempts++
+		
+			#----------------#
+			# Database Stuff #
+			#----------------#
+			
 			print(keypad.SendLine(command["good"]))
 			time.sleep(2)
-			print(keypad.SendLine(modeLookUp["normal"]))
-			print(motor.SendLine(modeLookUp["normal"]))
-			return modes[0]
+			print(keypad.SendLine(command["more"]))
+			#print(motor.SendLine(command["more"]))
 			
+			response = keypad.ReadLine()
+			if response == command["ack"]:
+				qBank.generateTime()
+				setTime = setModeTime(id)
+				sessionActive = True
+				
+			else:
+				sessionActive = False
+				
+			#return modes[0]
 		else:
+			numAttempts++
+			
+			#----------------#
+			# Database Stuff #
+			#----------------#
+			
 			print(keypad.SendLine(command["wrong"]))
 			time.sleep(2)
-			print(keypad.SendLine(modeLookUp["normal"]))
-			print(motor.SendLine(modeLookUp["normal"]))
-			return modes[0]
+			print(keypad.SendLine(command["more"]))
+			response = keypad.ReadLine()
+			
+			if response == command["ack"]:
+				sessionActive = True
+				
+			else:
+				sessionActive = False
+				
+	return [sessionActive, modes[0]]
+				
 
-	except KeyError:
-		print "Error!!!"
-		return modes[0]
-		
 def setModeTime(ID):
 
 	# Get difficulty level that the student is on
 	# return time based on that level
 	global qBank
 	return qBank.getTimeString()
+	
+def checkSetTime(readTime, sentTime):
+
+	#Remove leading whitespaces:
+
+	readTime = re.sub("^0+","",readTime)
+	sentTime = re.sub("^0+","",sentTime)
+
+	#Convert To Integers
+	readHour = int(readTime.split(',')[0])
+	readMinute = int(readTime.split(',')[1])
+
+	sentHour = int(sentTime.split(',')[0])
+	sentMinute = int(sentTime.split(',')[1])
+
+	print "Check readTime entered"
+	print "Time received: " + str(readHour) + "," + str(readMinute)
+	print "Time sent: " + str(sentHour) + "," + str(sentMinute)
+	# compare entered time with time given to student
+	# return TRUE or False
+	
+	if readHour == sentHour and readMinute == sentMinute:
+		return True
+		
+	else: 
+		return False
+	
+	#return True
+
 		

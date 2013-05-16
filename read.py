@@ -2,11 +2,15 @@ import time	# Does not execute this command when launched from terminal
 from commands import *
 from ClockAideTime import *
 from questionBank import QuestionBank
+from keypad import *
+from Motors import *
+from DB import *
 
 keypad = keypad()
 motor = motors()
 
 qBank = QuestionBank(databaseLocation)
+DB clockAideDB = DB("ClockAideDB")
 
 def read(id, sessionActive):
 	qBank.generateTime()
@@ -14,7 +18,7 @@ def read(id, sessionActive):
 	numAttempts = 0
 	#answerRight = 
 	#while sessionActive && answerWrong:
-	while (sessionActive && (numAttempts < 4)):
+	while (sessionActive && (numAttempts < 3)):
 		
 		keypad.SendLine(modeLookUp["read"])
 		motor.SendLine(modeLookUp["read"])
@@ -29,33 +33,28 @@ def read(id, sessionActive):
 	# Create a readtime function
 
 		if checkReadTime(keypadTime,readTime):
-			numAttempts++
-		
-			#----------------#
-			# Database Stuff #
-			#----------------#
+			numAttempts = 0
+			
+			clockAideDB.addToStudentResponseTable(clockAideDB.getQuestionID(), keypadTime)
 			
 			print(keypad.SendLine(command["good"]))
 			time.sleep(2)
 			print(keypad.SendLine(command["more"]))
-			#print(motor.SendLine(command["more"]))
-			
+						
 			response = keypad.ReadLine()
 			if response == command["ack"]:
 				qBank.generateTime()
 				readTime = readModeTime(id)
 				sessionActive = True
-				
 			else:
+				keypad.SendLine(modeLookUp["normal"])
 				sessionActive = False
 				
 			#return modes[0]
 		else:
 			numAttempts++
 			
-			#----------------#
-			# Database Stuff #
-			#----------------#
+			clockAideDB.addToStudentResponseTable(clockAideDB.getQuestionID(), keypadTime)
 			
 			print(keypad.SendLine(command["wrong"]))
 			time.sleep(2)
@@ -66,6 +65,7 @@ def read(id, sessionActive):
 				sessionActive = True
 				
 			else:
+				keypad.SendLine(modeLookUp["normal"])
 				sessionActive = False
 				
 	return [sessionActive, modes[0]]

@@ -2,17 +2,22 @@ import time	# Does not execute this command when launched from terminal
 from commands import *
 from ClockAideTime import *
 from questionBank import QuestionBank
+from keypad import *
+from Motors import *
+from DB import *
+
 
 keypad = keypad()
 motor = motors()
 
 qBank = QuestionBank(databaseLocation)
+DB clockAideDB = DB("ClockAideDB")
 
 def set(id, sessionActive):
 	qBank.generateTime()
 	setTime = setModeTime(id)
 	numAttempts = 0
-	while (sessionActive && (numAttempts < 4)):
+	while (sessionActive && (numAttempts < 3)):
 	
 		keypad.SendLine(modeLookUp["set"])
 		motor.SendLine(modeLookUp["set"])
@@ -22,18 +27,17 @@ def set(id, sessionActive):
 		randomTime = qBank.getTimeTouple()
 		speakTime(randomTime[0],randomTime[1])
 
-
 		comm = COMMAND[str(keypad.read())]
 	
 		if comm == "GET_TIME":
+			motor.SendLine(command["get_time"])
+			delay(2)
 			motorTime = motor.ReadLine()
 		
 		if checkSetTime(motorTime, setTime):
-			numAttempts++
-		
-			#----------------#
-			# Database Stuff #
-			#----------------#
+			numAttempts = 0
+			
+			clockAideDB.addToStudentResponseTable(clockAideDB.getQuestionID(), keypadTime)
 			
 			print(keypad.SendLine(command["good"]))
 			time.sleep(2)
@@ -53,9 +57,7 @@ def set(id, sessionActive):
 		else:
 			numAttempts++
 			
-			#----------------#
-			# Database Stuff #
-			#----------------#
+			clockAideDB.addToStudentResponseTable(clockAideDB.getQuestionID(), keypadTime)
 			
 			print(keypad.SendLine(command["wrong"]))
 			time.sleep(2)
